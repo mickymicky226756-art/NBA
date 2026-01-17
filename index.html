@@ -1,0 +1,2522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Sneaker</title>
+
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/889/889455.png">    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    
+    <style>
+        /* --- Modern NBA/Sneaker Theme --- */
+        :root {
+            --primary-color: #FF5722;
+            --secondary-color: #1A1A1A;
+            --accent-color: #2196F3;
+            --bg-color: #F5F7FA;
+            --card-bg: #FFFFFF;
+            --text-color: #333333;
+            --gradient-main: linear-gradient(135deg, #FF5722 0%, #FF8A50 100%);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+
+        /* --- CUSTOMER SERVICE FLOATING BUTTON --- */
+        .cs-float-btn {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 55px;
+            height: 55px;
+            background: linear-gradient(135deg, #0088cc 0%, #005f8f 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+            box-shadow: 0 5px 20px rgba(0, 136, 204, 0.5);
+            z-index: 2900;
+            font-size: 24px;
+            transition: transform 0.3s;
+            animation: pulse 2s infinite;
+        }
+
+        .cs-float-btn:hover {
+            transform: scale(1.1);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 136, 204, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(0, 136, 204, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 136, 204, 0); }
+        }
+
+        /* --- AUTH PAGE STYLING (MODIFIED FOR TRANSPARENCY) --- */
+        #authSection {
+            width: 100%;
+            min-height: 100vh;
+            display: flex; 
+            justify-content: center;
+            align-items: center;
+            /* Background image with overlay */
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('https://en.wikipedia.org/wiki/National_Basketball_Association#/media/File:National_Basketball_Association_logo.svg');
+            background-size: cover;
+            background-position: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .auth-box {
+            /* Changed: Made Transparent and removed shadow */
+            background-color: transparent; 
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: none;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+        }
+
+        .auth-logo {
+            font-size: 2.8em;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5); /* Added shadow to pop */
+        }
+
+        .auth-box p {
+            color: #ddd; /* Light text color */
+        }
+
+        .input-group {
+            display: flex;
+            margin: 15px 0;
+            border: none;
+            border-radius: 50px; /* Rounder inputs */
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.9); /* Semi-transparent white input */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .input-group span {
+            background-color: transparent;
+            padding: 12px 0 12px 15px;
+            font-weight: 600;
+            color: #555;
+            display: flex; align-items: center;
+        }
+
+        .auth-box input {
+            flex-grow: 1;
+            padding: 14px;
+            border: none;
+            outline: none;
+            width: 100%;
+            font-family: 'Poppins', sans-serif;
+            background: transparent;
+            font-weight: 500;
+        }
+
+        .simple-input {
+            width: 100%;
+            padding: 14px 20px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 50px; /* Rounder inputs */
+            box-sizing: border-box;
+            outline: none;
+            font-family: 'Poppins', sans-serif;
+            background: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            font-weight: 500;
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--gradient-main);
+            color: white;
+            border: none;
+            border-radius: 50px; /* Fully rounded button */
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-top: 20px;
+            box-shadow: 0 5px 20px rgba(255, 87, 34, 0.5);
+            transition: transform 0.2s;
+        }
+        
+        .auth-btn:active { transform: scale(0.95); }
+
+        .auth-switch { margin-top: 25px; font-size: 0.95em; color: #ccc; }
+        .auth-switch a { color: var(--primary-color); font-weight: bold; text-decoration: none; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+
+        /* --- MAIN APP CONTAINER --- */
+        .container {
+            max-width: 480px;
+            width: 100%;
+            margin: 0 auto; 
+            background-color: #fff;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            display: none; 
+            padding-bottom: 70px;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            color: var(--secondary-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        header .logo { font-weight: 800; font-size: 1.2em; color: var(--primary-color); display: flex; align-items: center; gap: 8px;}
+        
+        .sub-page-header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .back-btn { font-size: 1.2em; margin-right: 15px; cursor: pointer; color: #555; }
+        .page-title { font-weight: 700; font-size: 1.1em; color: var(--secondary-color); }
+
+        .navbar {
+            display: flex;
+            justify-content: space-around;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 480px;
+            background-color: white;
+            border-top: 1px solid #f0f0f0;
+            z-index: 1000;
+            padding-bottom: 5px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.03);
+        }
+
+        .nav-item {
+            flex-grow: 1;
+            text-align: center;
+            padding: 12px 0;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+
+        .nav-item.active { color: var(--primary-color); }
+        .nav-item i { font-size: 1.4em; display: block; margin-bottom: 4px; }
+        .nav-item span { font-size: 0.75em; font-weight: 600; }
+        
+        .content { padding: 15px; }
+        .page-section { display: none; padding-bottom: 20px; }
+        
+        /* Slideshow */
+        .slideshow-container {
+            height: 180px; margin-bottom: 20px; overflow: hidden; position: relative; border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        .slide-img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Balance Card */
+        .balance-card {
+            background: linear-gradient(135deg, #1A1A1A 0%, #333 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .balance-card::after {
+            content: ''; position: absolute; right: -20px; bottom: -20px;
+            width: 100px; height: 100px; background: rgba(255, 87, 34, 0.2);
+            border-radius: 50%;
+        }
+        .balance-label { font-size: 0.9em; opacity: 0.8; }
+        .balance-amount { font-size: 2.2em; font-weight: 700; margin: 5px 0; color: var(--primary-color); }
+        
+        /* Function Grid */
+        .function-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 15px;
+            background: white;
+            padding: 20px 10px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+        }
+
+        .function-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            text-align: center;
+            transition: transform 0.1s ease; /* Added transition */
+        }
+        
+        .function-icon-box {
+            width: 50px; height: 50px; border-radius: 15px; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-size: 1.2em; color: white;
+        }
+        .function-item span { font-size: 0.8em; color: #444; font-weight: 600; white-space: nowrap; }
+
+        /* --- DEPOSIT & AMOUNT SELECT STYLES --- */
+        .bank-select-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .bank-option-card {
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .bank-option-card.active {
+            border-color: var(--primary-color);
+            background-color: #fff3e0;
+            transform: translateY(-2px);
+        }
+        .bank-option-card i { font-size: 1.5em; color: #555; margin-bottom: 5px; }
+        .bank-option-card strong { display: block; font-size: 0.9em; color: var(--secondary-color); }
+
+        .amount-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .amount-btn {
+            padding: 12px 5px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .amount-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 10px rgba(255, 87, 34, 0.3);
+        }
+
+        /* --- NEWS PAGE STYLES --- */
+        .news-card {
+            display: flex;
+            gap: 15px;
+            background: white;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+            border: 1px solid #f5f5f5;
+        }
+        .news-card:active { transform: scale(0.98); }
+        .news-img { width: 100px; height: 85px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+        .news-content { flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .news-title { font-size: 0.95em; font-weight: bold; color: #222; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .news-meta { font-size: 0.75em; color: #888; display: flex; justify-content: space-between; margin-top: 5px; }
+        .news-tag { background: #e3f2fd; color: #1976D2; padding: 2px 6px; border-radius: 4px; font-weight: 600; font-size: 0.9em;}
+
+
+        /* --- BUTTON STYLES FOR ME PAGE --- */
+        .me-btn-container { display: flex; flex-direction: column; gap: 20px; margin-top: 20px; padding: 0 5px; }
+        .me-btn {
+            width: 100%; padding: 18px 25px; border-radius: 50px; color: white; font-weight: 700;
+            display: flex; justify-content: space-between; align-items: center; border: none;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15); font-size: 0.95em; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s; text-transform: uppercase;
+        }
+        
+        .me-btn:active { transform: scale(0.95); }
+        .me-btn i { font-size: 1.2em; }
+        .btn-bank { background: linear-gradient(90deg, #FF416C 0%, #FF4B2B 100%); }
+        .btn-pass { background: linear-gradient(90deg, #8E2DE2 0%, #4A00E0 100%); }
+        .btn-logout { background: linear-gradient(90deg, #f12711 0%, #f5af19 100%); }
+        .btn-record { background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%); }
+        .btn-info { background: linear-gradient(90deg, #2196F3 0%, #21CBF3 100%); }
+
+        /* --- TRANSACTION RECORD PAGE STYLES --- */
+        .record-filter {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            background: #fff;
+            padding: 5px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .filter-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            color: #777;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+        .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .record-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .record-card.type-deposit { border-left-color: #4CAF50; }
+        .record-card.type-withdraw { border-left-color: #F44336; }
+        .record-card.type-invest { border-left-color: #9C27B0; }
+        
+        .rec-info h4 { margin: 0 0 5px 0; font-size: 0.95em; color: var(--secondary-color); }
+        .rec-info small { color: #888; font-size: 0.75em; }
+        .rec-amount { font-weight: bold; font-size: 1.1em; }
+        .rec-status { font-size: 0.7em; padding: 3px 8px; border-radius: 10px; font-weight: bold; margin-top: 5px; display: inline-block; }
+        .st-pending { background: #fff3e0; color: #ff9800; }
+        .st-approved, .st-success { background: #e8f5e9; color: #4CAF50; }
+        .st-rejected { background: #ffebee; color: #c62828; }
+
+        /* --- Investment Plans --- */
+        .section-title { font-size: 1.1em; font-weight: 700; color: var(--secondary-color); margin-bottom: 15px; border-left: 4px solid var(--primary-color); padding-left: 10px; }
+        .plans-grid { display: flex; flex-direction: column; gap: 20px; padding-bottom: 20px; }
+        .plan-card {
+            width: 100%; background: white; border-radius: 15px; overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee; display: flex; 
+            flex-direction: column; transition: transform 0.3s;
+        }
+        .plan-card:hover { transform: translateY(-5px); }
+        .plan-img-box { width: 100%; height: 180px; background: #f9f9f9; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .plan-img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .plan-info { padding: 15px; }
+        .plan-name { font-weight: 700; color: var(--secondary-color); margin-bottom: 5px; font-size: 1.1em; }
+        .plan-price { font-size: 1.2em; color: var(--primary-color); font-weight: 800; margin-bottom: 10px; }
+        .plan-details { display: flex; justify-content: space-between; background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee; }
+        .plan-details span { font-size: 0.85em; color: #555; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+        .invest-btn {
+            width: 100%; padding: 14px; background: var(--secondary-color); color: white;
+            border: none; font-weight: bold; cursor: pointer; border-radius: 10px;
+            transition: background 0.3s; font-size: 1em;
+        }
+        .invest-btn:hover { background: var(--primary-color); }
+
+        /* --- TEAM BUTTONS & LIST STYLES --- */
+        .team-btn-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .team-filter-btn { 
+            padding: 12px; border: 1px solid #eee; background: white; border-radius: 10px; 
+            font-weight: bold; cursor: pointer; color: #555; transition: 0.3s;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+        }
+        .team-filter-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        
+        .member-card { 
+            display: flex; justify-content: space-between; align-items: center; padding: 15px; 
+            background: white; margin-bottom: 10px; border-radius: 10px; 
+            border-left: 5px solid #ccc; box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+        }
+        .member-card.status-active { border-left-color: #4CAF50; } 
+        .member-card.status-inactive { border-left-color: #F44336; } 
+        
+        .member-info h4 { margin: 0; font-size: 1em; color: var(--secondary-color); }
+        .member-info p { margin: 3px 0 0; font-size: 0.8em; color: #777; }
+        .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 0.75em; font-weight: bold; }
+        .status-badge.active { background: #e8f5e9; color: #2e7d32; }
+        .status-badge.inactive { background: #ffebee; color: #c62828; }
+
+
+        /* Modals */
+        .modal {
+            display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6); backdrop-filter: blur(3px); overflow-y: auto;
+        }
+        .modal-content {
+            background-color: #fff; margin: 20% auto; padding: 25px; border-radius: 20px;
+            width: 85%; max-width: 400px; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp { from {transform: translateY(50px); opacity: 0;} to {transform: translateY(0); opacity: 1;} }
+
+        .close-btn { position: absolute; right: 20px; top: 15px; font-size: 24px; cursor: pointer; color: #999; }
+        .modal h2 { margin-top: 0; color: var(--secondary-color); font-size: 1.3em; margin-bottom: 20px; }
+        .modal-btn { width: 100%; padding: 14px; background: var(--primary-color); color: white; border: none; border-radius: 10px; font-weight: bold; margin-top: 15px; cursor: pointer; }
+
+        /* LOADING SPINNER FOR CHECK-IN */
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* NEW: STYLES FOR CONGRATS MODAL */
+        .success-icon { font-size: 60px; color: #4CAF50; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); } }
+        .congrats-amount { font-size: 2em; color: var(--primary-color); font-weight: bold; margin: 10px 0; }
+
+        .admin-bank-card {
+            background: linear-gradient(135deg, #1A1A1A 0%, #000 100%);
+            color: #fff; padding: 25px; border-radius: 15px; margin: 20px 0; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .admin-bank-card h3 { margin: 0; font-size: 1.1em; color: #aaa; font-weight: 400; }
+        .admin-bank-card h1 { margin: 10px 0; font-size: 1.8em; letter-spacing: 1px; color: var(--primary-color); word-break: break-all; }
+        .copy-pill { background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; font-size: 0.8em; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+
+        /* Admin */
+        .admin-panel { max-width: 500px; margin: 0 auto; padding: 20px; display: none; background: #fff; min-height: 100vh;}
+        .admin-section { border: 1px solid #eee; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .logo-grid { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
+        .logo-option { width: 60px; height: 60px; border: 2px solid transparent; border-radius: 8px; padding: 2px; cursor: pointer; background: #f5f5f5; overflow: hidden;}
+        .logo-option.selected { border-color: var(--primary-color); background: #fff3e0; }
+        .logo-option img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+
+        .admin-list-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #eee;
+        }
+        .admin-list-item button { background: #ffebee; color: #d32f2f; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        .admin-deposit-item {
+            background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 8px; margin-bottom: 10px;
+        }
+        .dep-btn-group { display: flex; gap: 10px; margin-top: 5px; }
+        .dep-btn-approve { flex: 1; background: #4CAF50; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer; }
+        .dep-btn-reject { flex: 1; background: #F44336; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer; }
+
+        /* Profile */
+        .profile-header { display: flex; flex-direction: column; align-items: center; padding: 20px 0; background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .profile-pic { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--primary-color); overflow: hidden; margin-bottom: 10px; }
+        .profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; width: 100%; }
+        .stat-box { background: #f9f9f9; padding: 15px; border-radius: 10px; text-align: center; }
+        .stat-val { font-size: 1.1em; font-weight: bold; color: var(--secondary-color); }
+        .stat-lbl { font-size: 0.8em; color: #777; }
+
+        /* Notification Toast */
+        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 16px; position: fixed; z-index: 3000; left: 50%; bottom: 80px; transform: translateX(-50%); font-size: 0.9em; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 80px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 80px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+
+        /* --- ADDED CLICK ANIMATION --- */
+        button:active, 
+        .function-item:active, 
+        .auth-btn:active, 
+        .me-btn:active, 
+        .invest-btn:active,
+        .modal-btn:active,
+        .nav-item:active,
+        .team-filter-btn:active,
+        .filter-btn:active,
+        .amount-btn:active {
+            transform: scale(0.95);
+            transition: transform 0.1s ease-out;
+        }
+
+    </style>
+</head>
+<body>
+
+    <a href="https://t.me/nba_cs_admin" target="_blank" class="cs-float-btn">
+        <i class="fas fa-headset"></i>
+    </a>
+
+    <div id="authSection">
+        <div class="auth-box">
+            <div class="auth-logo"><i class="fas fa-basketball-ball"></i> NBA Market</div>
+            <p style="margin-bottom: 20px;">Premium Sneaker Trading Platform</p>
+            
+            <h2 id="authTitle" style="color:white !important;">Login</h2>
+            <p id="authMessage" style="color:red; font-size:0.9em; background: rgba(15, 7, 7, 0.5); border-radius:5px;"></p>
+            
+            <form id="authForm">
+                <div class="input-group">
+                    <span><i class="fas fa-phone-alt"></i> &nbsp; +251</span>
+                    <input type="number" id="authPhone" placeholder="9XXXXXXXX" required>
+                </div>
+                <input type="password" class="simple-input" id="authPass" placeholder="Password" required>
+                
+                <input type="password" class="simple-input" id="authConfirmPass" placeholder="Confirm Password" style="display:none;">
+                <input type="text" class="simple-input" id="authRef" placeholder="Referral Code (Optional)" style="display:none;">
+                
+                <button type="submit" class="auth-btn" id="authBtn">LOGIN</button>
+            </form>
+            
+            <div class="auth-switch">
+                <span id="switchText">New here? </span>
+                <a href="#" onclick="toggleAuth()">Create Account</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="mainApp">
+        <header id="mainHeader">
+            <div class="logo"><i class="fas fa-basketball-ball"></i> NBA SNEAKERS</div>
+            <div style="font-size:0.9em; font-weight:bold;">ETB</div>
+        </header>
+
+        <div class="content">
+            <div class="page-section" id="homePage" style="display: block;">
+                <div class="slideshow-container">
+                    <img class="slide-img" src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2070&auto=format&fit=crop" id="slideImg">
+                </div>
+
+                <div class="balance-card">
+                    <div class="balance-label">Total Asset Balance</div>
+                    <div class="balance-amount"><span id="userBalance">0.00</span> ETB</div>
+                    <div style="font-size:0.8em; opacity:0.8;">Daily Revenue: <span id="dailyRev">0.00</span> ETB</div>
+                </div>
+
+                <div class="function-grid">
+                    <div class="function-item" onclick="openDepositPage()">
+                        <div class="function-icon-box" style="background: linear-gradient(135deg, #4CAF50, #81C784);">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <span>Deposit</span>
+                    </div>
+                    
+                    <div class="function-item" onclick="switchPage('investPage')">
+                        <div class="function-icon-box" style="background: linear-gradient(135deg, #9C27B0, #BA68C8);">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <span>Invest Plans</span>
+                    </div>
+
+                    <div class="function-item" onclick="openWithdrawPage()">
+                        <div class="function-icon-box" style="background: linear-gradient(135deg, #F44336, #E57373);">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <span>Withdraw</span>
+                    </div>
+                    <div class="function-item" onclick="openModal('telegramModal')">
+                        <div class="function-icon-box" style="background: linear-gradient(135deg, #2196F3, #64B5F6);">
+                            <i class="fab fa-telegram-plane"></i>
+                        </div>
+                        <span>Telegram</span>
+                    </div>
+                    <div class="function-item" onclick="dailyCheckIn()">
+                        <div class="function-icon-box" style="background: linear-gradient(135deg, #FF9800, #FFC107);">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <span>Check-in</span>
+                    </div>
+                    
+                    <div class="function-item" onclick="switchPage('giftPage')">
+                        <div class="function-icon-box" style="background: linear-gradient(135deg, #E91E63, #F48FB1);">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        <span>Gift</span>
+                    </div>
+
+                    <div class="function-item" onclick="switchPage('marketPage')">
+                        <div class="function-icon-box" style="background: linear-gradient(135deg, #3F51B5, #7986CB);">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <span>Plans</span>
+                    </div>
+
+                    <div class="function-item" onclick="switchPage('taskPage')">
+                        <div class="function-icon-box" style="background: linear-gradient(135deg, #673AB7, #9575CD);">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <span>Task Reward</span>
+                    </div>
+                </div>
+
+                <div class="section-title">Latest Opportunities</div>
+                <div class="plans-grid" id="plansContainer">
+                    <p>Loading market data...</p>
+                </div>
+            </div>
+
+            <div class="page-section" id="marketPage">
+                <div class="sub-page-header">
+                    <i class="fas fa-arrow-left back-btn" onclick="switchPage('homePage')"></i>
+                    <div class="page-title">Investment Market</div>
+                </div>
+                <div style="padding: 15px;">
+                    <p style="color:#666; margin-bottom:15px; font-size:0.9em; text-align:center;">
+                        Choose an investment plan created by our team.
+                    </p>
+                    <div class="plans-grid" id="marketPlansContainer">
+                        <p style="text-align:center; color:#999;">Loading plans...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-section" id="taskPage">
+                <div class="sub-page-header">
+                    <i class="fas fa-arrow-left back-btn" onclick="switchPage('homePage')"></i>
+                    <div class="page-title">Task Rewards</div>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="text-align:center; margin-bottom:20px;">
+                        <i class="fas fa-medal" style="font-size:3em; color:#673AB7; margin-bottom:10px;"></i>
+                        <h2 style="color:var(--secondary-color); margin:0;">Admin Tasks</h2>
+                        <p style="color:#666; font-size:0.9em;">Complete tasks or receive admin rewards here.</p>
+                    </div>
+
+                    <div id="taskContainer" style="display:flex; flex-direction:column; gap:15px;">
+                        <p style="text-align:center; color:#999;">Loading tasks...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-section" id="giftPage">
+                <div class="sub-page-header">
+                    <i class="fas fa-arrow-left back-btn" onclick="switchPage('homePage')"></i>
+                    <div class="page-title">Redeem Gift</div>
+                </div>
+                <div style="padding: 40px 20px; text-align: center;">
+                    <div style="width: 100px; height: 100px; background: #ffebee; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+                        <i class="fas fa-gift" style="font-size: 3em; color: #E91E63;"></i>
+                    </div>
+                    <h2 style="color: var(--secondary-color);">Promo Code</h2>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 30px;">Enter your promotional gift code below to receive free balance instantly.</p>
+                    
+                    <input type="text" id="giftCodeInput" class="simple-input" placeholder="Enter Code (e.g. NBA2026)" style="text-align: center; letter-spacing: 2px; font-weight: bold; text-transform: uppercase;">
+                    
+                    <button class="auth-btn" onclick="submitGiftCode()" style="background: linear-gradient(135deg, #E91E63, #c2185b);">Redeem Now</button>
+                    
+                    <div style="margin-top: 30px; font-size: 0.8em; color: #999;">
+                        <p><i class="fas fa-info-circle"></i> Codes are time-sensitive and limited.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-section" id="newsPage">
+                <div class="section-title">Basketball & Sneaker News</div>
+                <div id="newsContainer">
+                    <p style="text-align:center; color:#999;">Updating news feed...</p>
+                </div>
+            </div>
+
+            <div class="page-section" id="investPage">
+                <div class="sub-page-header">
+                    <i class="fas fa-arrow-left back-btn" onclick="switchPage('homePage', document.querySelectorAll('.nav-item')[0])"></i>
+                    <div class="page-title">Investment Center</div>
+                </div>
+
+                <div style="padding: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div class="section-title" style="margin-bottom: 0;">My Collection (Active)</div>
+                        <button onclick="switchPage('marketPage')" 
+                            style="background: var(--primary-color); color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 0.9em; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                            <i class="fas fa-plus"></i> Buy New
+                        </button>
+                    </div>
+                    
+                    <div id="myInvestmentsList" style="padding-bottom: 20px;">
+                        <p style="text-align:center; color:#999; margin-top:50px;">No active sneaker investments.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-section" id="teamPage">
+                <div class="balance-card" style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);">
+                    <div class="balance-label">Team Commission</div>
+                    <div class="balance-amount"><span id="teamComm">0.00</span> ETB</div>
+                    <div style="margin-top:10px; font-size:0.9em; background:rgba(255,255,255,0.2); padding:5px; border-radius:5px; display:inline-block;">
+                        Code: <strong id="myRefCode">...</strong> &nbsp;|&nbsp; 
+                        <span onclick="copyRefLink()" style="cursor:pointer; text-decoration:underline;">Copy Link <i class="fas fa-link"></i></span>
+                    </div>
+                </div>
+
+                <div style="background:#fff; padding:15px; border-radius:15px; margin-bottom:20px; box-shadow:0 5px 15px rgba(0,0,0,0.05);">
+                    <h4 style="margin:0 0 15px 0; color:var(--secondary-color); border-bottom:1px solid #eee; padding-bottom:10px;">
+                        <i class="fas fa-gift" style="color:var(--primary-color);"></i> Commission Rates
+                    </h4>
+                    
+                    <div style="display:flex; justify-content:space-around; text-align:center; margin-bottom:15px;">
+                        <div>
+                            <div style="color:var(--primary-color); font-weight:800; font-size:1.3em;">12%</div>
+                            <div style="font-size:0.8em; color:#666;">Level 1</div>
+                        </div>
+                        <div>
+                            <div style="color:#2196F3; font-weight:800; font-size:1.3em;">5%</div>
+                            <div style="font-size:0.8em; color:#666;">Level 2</div>
+                        </div>
+                        <div>
+                            <div style="color:#9C27B0; font-weight:800; font-size:1.3em;">2%</div>
+                            <div style="font-size:0.8em; color:#666;">Level 3</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background:#f0f7ff; padding:10px; border-radius:8px; font-size:0.85em; color:#555;">
+                        <strong><i class="fas fa-check-circle"></i> Invite Bonus:</strong> Get 12% instantly when Level 1 invests.<br>
+                        <strong><i class="fas fa-sync-alt"></i> Daily Income:</strong> Earn daily % from team profits.
+                    </div>
+                </div>
+
+                <div class="section-title">Team Structure</div>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-bottom:15px;">
+                    <div style="background: #e8f5e9; padding: 10px; border-radius: 10px; text-align: center; border: 1px solid #c8e6c9;">
+                        <div style="font-size: 1.2em; font-weight: bold; color: #2e7d32;" id="cntL1">0</div>
+                        <div style="font-size: 0.75em; color: #555;">L1 Active</div>
+                    </div>
+                    <div style="background: #e3f2fd; padding: 10px; border-radius: 10px; text-align: center; border: 1px solid #bbdefb;">
+                        <div style="font-size: 1.2em; font-weight: bold; color: #1565c0;" id="cntL2">0</div>
+                        <div style="font-size: 0.75em; color: #555;">L2 Active</div>
+                    </div>
+                    <div style="background: #f3e5f5; padding: 10px; border-radius: 10px; text-align: center; border: 1px solid #e1bee7;">
+                        <div style="font-size: 1.2em; font-weight: bold; color: #7b1fa2;" id="cntL3">0</div>
+                        <div style="font-size: 0.75em; color: #555;">L3 Active</div>
+                    </div>
+                </div>
+                <div class="team-btn-grid">
+                    <button class="team-filter-btn active" onclick="loadTeamList(1, this)">Level 1</button>
+                    <button class="team-filter-btn" onclick="loadTeamList(2, this)">Level 2</button>
+                    <button class="team-filter-btn" onclick="loadTeamList(3, this)">Level 3</button>
+                </div>
+
+                <div id="teamListContainer" style="padding-bottom: 30px;">
+                    <p style="text-align:center; color:#999;">Loading members...</p>
+                </div>
+            </div>
+
+            <div class="page-section" id="mePage">
+                <div class="profile-header">
+                    <div class="profile-pic">
+                        <img src="https://cdn-icons-png.flaticon.com/512/1154/1154970.png" alt="User">
+                    </div>
+                    <h3 style="margin:0;" id="profilePhone">...</h3>
+                    
+                    <p style="margin: 2px 0 0 0; font-size: 0.85em; color: #666; font-weight: 500;">
+                        ID: <span id="userProfileID">...</span>
+                    </p>
+
+                    <div class="stat-grid">
+                        <div class="stat-box">
+                            <div class="stat-val" id="meRecharge">0</div>
+                            <div class="stat-lbl">Recharge</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="meWithdraw">0</div>
+                            <div class="stat-lbl">Withdraw</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="me-btn-container">
+                    <button class="me-btn btn-bank" onclick="openModal('bankModal')">
+                        <span><i class="fas fa-university"></i> Bind Bank Card</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button class="me-btn btn-pass" onclick="openModal('passwordModal')">
+                        <span><i class="fas fa-lock"></i> Change Password</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    
+                    <button class="me-btn btn-record" onclick="openRecordPage()">
+                        <span><i class="fas fa-history"></i> Transaction Record</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+
+                    <button class="me-btn btn-info" onclick="switchPage('aboutPage')">
+                        <span><i class="fas fa-info-circle"></i> About Us</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+
+                    <button class="me-btn btn-logout" onclick="logout()">
+                        <span><i class="fas fa-sign-out-alt"></i> Logout</span>
+                        <i class="fas fa-power-off"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="page-section" id="aboutPage">
+                <div class="sub-page-header">
+                    <i class="fas fa-arrow-left back-btn" onclick="switchPage('mePage')"></i>
+                    <div class="page-title">About Platform</div>
+                </div>
+                <div style="padding: 20px; text-align: center;">
+                    <div style="font-size: 3.5em; color: var(--primary-color); margin-bottom: 5px;">
+                        <i class="fas fa-basketball-ball"></i>
+                    </div>
+                    <h2 style="margin: 5px 0; color: var(--secondary-color);">NBA SNEAKERS</h2>
+                    <p style="color: #888; font-size: 0.8em; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 25px;">
+                        Official Trading Platform
+                    </p>
+
+                    <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); text-align: left; margin-bottom: 20px;">
+                        <h4 style="margin-top: 0; color: var(--primary-color); display:flex; align-items:center; gap:10px;">
+                            <i class="fas fa-star"></i> Our Mission
+                        </h4>
+                        <p style="font-size: 0.9em; color: #555; line-height: 1.6;">
+                            NBA Sneakers Invest is Ethiopia's premier digital asset trading platform connecting sneaker enthusiasts with profitable market opportunities. We ensure secure transactions and transparent daily returns.
+                        </p>
+                    </div>
+
+                    <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); text-align: left; margin-bottom: 20px;">
+                        <h4 style="margin-top: 0; color: #2196F3; display:flex; align-items:center; gap:10px;">
+                            <i class="fas fa-shield-alt"></i> Security & Rules
+                        </h4>
+                        <ul style="padding-left: 20px; color: #555; font-size: 0.9em; line-height: 1.8;">
+                            <li>One account per person policy.</li>
+                            <li>Instant deposit & 24h withdrawal processing.</li>
+                            <li>Identity verification required for large funds.</li>
+                            <li>Strict anti-fraud monitoring systems.</li>
+                        </ul>
+                    </div>
+
+                    <div style="color: #999; font-size: 0.8em; margin-top: 30px;">
+                        <p>Version 2.1.0 (Beta)</p>
+                        <p>&copy; 2024 NBA Sneakers Corp.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-section" id="recordPage">
+                <div class="sub-page-header">
+                    <i class="fas fa-arrow-left back-btn" onclick="switchPage('mePage')"></i>
+                    <div class="page-title">Transaction History</div>
+                </div>
+
+                <div style="padding: 15px;">
+                    <div class="record-filter">
+                        <button class="filter-btn active" onclick="filterRecords('all', this)">All</button>
+                        <button class="filter-btn" onclick="filterRecords('deposit', this)">Deposit</button>
+                        <button class="filter-btn" onclick="filterRecords('withdraw', this)">Withdraw</button>
+                        <button class="filter-btn" onclick="filterRecords('invest', this)">Invest</button>
+                    </div>
+
+                    <div id="recordList" style="padding-bottom: 20px;">
+                        <p style="text-align:center; color:#999; margin-top:20px;">Loading history...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-section" id="withdrawPage">
+                <div class="sub-page-header">
+                    <i class="fas fa-arrow-left back-btn" onclick="closeWithdrawPage()"></i>
+                    <div class="page-title">Withdraw Funds</div>
+                </div>
+
+                <div style="padding: 20px;">
+                    <div class="balance-card" style="padding: 15px; margin-bottom: 20px; background: linear-gradient(135deg, #F44336, #E57373);">
+                        <div class="balance-label" style="font-size:0.8em;">Available Balance</div>
+                        <div class="balance-amount" style="font-size:1.8em; color:white;"><span id="withUserBalance">0.00</span> ETB</div>
+                    </div>
+
+                    <p style="margin-bottom: 8px; font-weight: bold; color: #555;">Enter Amount (ETB)</p>
+                    <input type="number" id="withAmount" class="simple-input" placeholder="Min 200 ETB">
+                    
+                    <p style="margin-bottom: 8px; margin-top: 15px; font-weight: bold; color: #555;">Withdrawal Password</p>
+                    <input type="password" id="withPass" class="simple-input" placeholder="Enter Withdrawal Password">
+
+                    <button class="auth-btn" onclick="submitWithdraw()" style="margin-top: 25px;">Request Withdraw</button>
+
+                    <div style="background: #fff3e0; padding: 15px; border-radius: 10px; margin-top: 30px;">
+                        <p style="margin: 0 0 5px 0; font-weight: bold; color: #e65100; font-size: 0.9em;"><i class="fas fa-info-circle"></i> Withdraw Rules</p>
+                        <ul style="margin: 0; padding-left: 20px; color: #777; font-size: 0.85em;">
+                            <li>Minimum withdrawal amount is 200 ETB.</li>
+                            <li>Must have invested at least once.</li>
+                            <li>Requests are processed within 24 hours.</li>
+                            <li>Ensure your Bank/Telebirr info is correct in "profile" page.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-section" id="depositPage">
+                <div class="sub-page-header">
+                    <i class="fas fa-arrow-left back-btn" onclick="closeDepositPage()"></i>
+                    <div class="page-title">Deposit Funds</div>
+                </div>
+
+                <div style="padding: 15px;">
+                    <div id="depSelectionStep">
+                        <p style="font-size:0.9em; font-weight:bold; margin-bottom:10px; color:#555;">1. Select Payment Method</p>
+                        <div id="bankListContainer" class="bank-select-grid">
+                            <p style="grid-column:span 2; font-size:0.8em; color:#999;">Loading methods...</p>
+                        </div>
+
+                        <p style="font-size:0.9em; font-weight:bold; margin-bottom:10px; margin-top:20px; color:#555;">2. Select Amount (ETB)</p>
+                        <div class="amount-grid">
+                            <button class="amount-btn" onclick="selectAmount(800, this)">800</button>
+                            <button class="amount-btn" onclick="selectAmount(1500, this)">1,500</button>
+                            <button class="amount-btn" onclick="selectAmount(3000, this)">3,000</button>
+                            <button class="amount-btn" onclick="selectAmount(5000, this)">5,000</button>
+                            <button class="amount-btn" onclick="selectAmount(8000, this)">8,000</button>
+                            <button class="amount-btn" onclick="selectAmount(10000, this)">10,000</button>
+                            <button class="amount-btn" onclick="selectAmount(15000, this)">15,000</button>
+                            <button class="amount-btn" onclick="selectAmount(20000, this)">20,000</button>
+                        </div>
+                        
+                        <input type="number" id="depCustomAmount" class="simple-input" placeholder="Or Enter Custom Amount" oninput="clearAmountBtns()">
+                        
+                        <button class="auth-btn" onclick="goToPaymentDetails()">Transfer Now</button>
+                    </div>
+
+                    <div id="depConfirmStep" style="display:none;">
+                        <p style="color:#666; font-size:0.9em; text-align:center;">Transfer <strong style="color:#333;" id="dispAmount">0</strong> ETB via <strong id="dispBankName">Bank</strong></p>
+                        
+                        <div class="admin-bank-card">
+                            <h3 id="finalBankType">Bank Name</h3>
+                            <h3 id="finalBankHolder" style="font-size:1em; margin-bottom:5px;">Holder Name</h3>
+                            <h1 id="finalAccNum">...</h1>
+                            <div class="copy-pill" onclick="copyText('finalAccNum')">
+                                <i class="fas fa-copy"></i> Copy Number
+                            </div>
+                        </div>
+
+                        <p style="font-size:0.8em; color:red; text-align:center;">Please transfer funds first, then enter the Transaction ID below.</p>
+                        
+                        <input type="text" id="depTID" class="simple-input" placeholder="Enter Transaction ID / Reference">
+                        
+                        <button class="modal-btn" onclick="submitDeposit()">Confirm Payment</button>
+                        <button onclick="backToSelection()" style="background:transparent; border:none; color:#777; width:100%; padding:10px; margin-top:10px; cursor:pointer;">Go Back</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="navbar" id="mainNavbar">
+            <div class="nav-item active" onclick="switchPage('homePage', this)">
+                <i class="fas fa-home"></i> <span>Dashboard</span>
+            </div>
+            <div class="nav-item" onclick="switchPage('newsPage', this)">
+                <i class="far fa-newspaper"></i> <span>News</span>
+            </div>
+            <div class="nav-item" onclick="switchPage('teamPage', this)">
+                <i class="fas fa-users"></i> <span>Team</span>
+            </div>
+            <div class="nav-item" onclick="switchPage('mePage', this)">
+                <i class="fas fa-user"></i> <span>profile</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminPanel" class="admin-panel">
+        <h2 style="color:#FF5722; text-align:center;">Admin Dashboard</h2>
+
+        <div class="admin-section" style="border: 2px solid #673AB7;">
+            <h3 style="color:#673AB7;"><i class="fas fa-tasks"></i> Assign Task Reward</h3>
+            <input type="number" id="admTaskPhone" placeholder="User Phone (e.g. 911223344)" class="simple-input">
+            <input type="number" id="admTaskAmount" placeholder="Reward Amount (ETB)" class="simple-input">
+            <input type="text" id="admTaskDesc" placeholder="Description (e.g. Share Post)" class="simple-input">
+            <button onclick="assignTask()" class="auth-btn" style="background: #673AB7;">Send Reward Task</button>
+        </div>
+        
+        <div class="admin-section" style="border: 2px solid #2196F3;">
+            <h3 style="color:#2196F3;"><i class="fas fa-wallet"></i> Pending Deposits</h3>
+            <div id="adminDepositList">
+                <p>Loading requests...</p>
+            </div>
+        </div>
+
+        <div class="admin-section" style="border: 2px solid #F44336;">
+            <h3 style="color:#F44336;"><i class="fas fa-money-bill-wave"></i> Pending Withdrawals</h3>
+            <div id="adminWithdrawList">
+                <p>Loading withdrawals...</p>
+            </div>
+        </div>
+
+        <div class="admin-section" style="border: 2px solid #E91E63;">
+            <h3 style="color:#E91E63;"><i class="fas fa-gift"></i> Create Gift Code</h3>
+            <input type="text" id="admGiftCode" placeholder="Code Name (e.g. BONUS100)" class="simple-input">
+            <input type="number" id="admGiftAmount" placeholder="Amount (ETB)" class="simple-input">
+            <input type="number" id="admGiftUsage" placeholder="Max Users" class="simple-input">
+            <button onclick="createGiftCode()" class="auth-btn" style="background: #E91E63;">Create Code</button>
+        </div>
+
+        <div class="admin-section" style="border: 2px solid #4CAF50;">
+            <h3 style="color:#4CAF50;"><i class="fas fa-power-off"></i> Daily Profit Control</h3>
+            <button onclick="releaseProfit()" class="auth-btn" style="background:#4CAF50;">RELEASE PROFIT (OPEN)</button>
+        </div>
+
+        <div class="admin-section">
+            <h3>Manage Sneaker Plans</h3>
+            
+            <div style="background:#fff3e0; padding:10px; border-radius:10px; margin-bottom:20px; border:1px solid #FF9800;">
+                <h4 style="margin:0 0 10px 0; color:#e65100;">Add / Edit Plan</h4>
+                <input type="hidden" id="pId"> <input type="text" id="pName" placeholder="Plan Name" class="simple-input">
+                <input type="number" id="pPrice" placeholder="Price (ETB)" class="simple-input">
+                <input type="number" id="pDaily" placeholder="Daily Profit" class="simple-input">
+                <input type="number" id="pDays" placeholder="Days" class="simple-input">
+                <input type="text" id="pLogoUrl" placeholder="Image URL" class="simple-input">
+                
+                <div class="logo-grid">
+                    <div class="logo-option" onclick="selectLogo(this, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2070')"><img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2070"></div>
+                    <div class="logo-option" onclick="selectLogo(this, 'https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2070')"><img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2070"></div>
+                </div>
+                
+                <button onclick="addPlan()" id="btnPlanAction" class="auth-btn">Publish Plan</button>
+                <button onclick="resetPlanForm()" id="btnPlanCancel" style="display:none; background:#777; margin-top:5px;" class="auth-btn">Cancel Edit</button>
+            </div>
+
+            <h4 style="margin-bottom:10px;">Existing Plans</h4>
+            <div id="adminPlanListContainer">
+                <p>Loading plans...</p>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h3>User Verification Control</h3>
+            <p style="font-size:0.8em; color:#666;">Enter user phone to set a bind code.</p>
+            <input type="number" id="admBindPhone" placeholder="User Phone (e.g. 911223344)" class="simple-input">
+            <input type="text" id="admBindCode" placeholder="Code (e.g. 1234)" class="simple-input">
+            <button onclick="adminSetVerification()" class="auth-btn" style="background:#9C27B0;">Set Verification Code</button>
+        </div>
+
+        <div class="admin-section">
+            <h3>Manage Payment Methods</h3>
+            
+            <div style="background:#eee; padding:10px; border-radius:10px; margin-bottom:15px;">
+                <h4 style="margin:0 0 10px 0;">Add New</h4>
+                <input type="text" id="admBankType" placeholder="Method Name (e.g. CBE)" class="simple-input" style="margin:5px 0;">
+                <input type="text" id="admBankName" placeholder="Account Name" class="simple-input" style="margin:5px 0;">
+                <input type="number" id="admBankNum" placeholder="Account Number" class="simple-input" style="margin:5px 0;">
+                <button onclick="addPaymentMethod()" class="auth-btn" style="background:#333; margin-top:5px; padding:10px;">Add</button>
+            </div>
+
+            <h4 style="margin-bottom:10px;">Existing Methods (Delete)</h4>
+            <div id="adminBankList">
+                <p>Loading...</p>
+            </div>
+        </div>
+
+        <button onclick="logout()" class="auth-btn" style="background:#F44336;">Exit Admin</button>
+    </div>
+
+    <div id="bankModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('bankModal')">&times;</span>
+            <h2>Bind Account</h2>
+            <select id="bindBankType" class="simple-input">
+                <option value="CBE">CBE</option>
+                <option value="Telebirr">Telebirr</option>
+                <option value="Abyssinia">Abyssinia</option>
+            </select>
+            <input type="text" id="bindName" class="simple-input" placeholder="Full Name">
+            <input type="number" id="bindNum" class="simple-input" placeholder="Account Number">
+            
+            <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+            <p style="font-size:0.8em; color:#555; margin-bottom:5px;">Security Verification</p>
+            <input type="text" id="bindVerifCode" class="simple-input" placeholder="Verification Code (Ask Admin)">
+            <input type="password" id="bindWithPass" class="simple-input" placeholder="Set New Withdrawal Password">
+            
+            <button class="modal-btn" onclick="saveBank()">Save Details</button>
+        </div>
+    </div>
+
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('passwordModal')">&times;</span>
+            <h2>Change Password</h2>
+            
+            <div style="margin-bottom: 15px;">
+                <p style="margin:0 0 5px 0; font-size:0.9em; color:#666;">Current Password</p>
+                <input type="password" id="cpOld" class="simple-input" placeholder="Enter Old Password">
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <p style="margin:0 0 5px 0; font-size:0.9em; color:#666;">New Password</p>
+                <input type="password" id="cpNew" class="simple-input" placeholder="Enter New Password">
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <p style="margin:0 0 5px 0; font-size:0.9em; color:#666;">Confirm New Password</p>
+                <input type="password" id="cpConfirm" class="simple-input" placeholder="Re-enter New Password">
+            </div>
+            
+            <button class="modal-btn" onclick="submitChangePassword()">Update Password</button>
+        </div>
+    </div>
+
+    <div id="checkinModal" class="modal" style="display:none; align-items:center; justify-content:center;">
+        <div class="modal-content" style="text-align:center; width: 80%; max-width: 300px; padding:30px; margin: auto;">
+            <h3 style="color:var(--primary-color);">Checking In...</h3>
+            <div class="loader"></div>
+            <p id="checkinTimer" style="font-weight:bold; color:#555;">Please wait 15s</p>
+        </div>
+    </div>
+
+    <div id="congratsModal" class="modal" style="display:none; align-items:center; justify-content:center;">
+        <div class="modal-content" style="text-align:center; width: 80%; max-width: 300px; padding:30px; margin: auto;">
+            <i class="fas fa-check-circle success-icon"></i>
+            <h2 style="color:var(--secondary-color); margin: 15px 0;">Congratulations!</h2>
+            <p style="color:#666; margin-bottom:5px;">You have received</p>
+            <div id="congratsAmount" class="congrats-amount">0.00 ETB</div>
+            <button class="modal-btn" onclick="closeModal('congratsModal'); switchPage('homePage');">OK</button>
+        </div>
+    </div>
+
+    <div id="telegramModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('telegramModal')">&times;</span>
+            <h2 style="text-align:center; color:var(--primary-color);">Join Community</h2>
+            <p style="text-align:center; color:#666; margin-bottom:20px;">Stay updated with latest news and signals.</p>
+            
+            <button class="me-btn" style="background: linear-gradient(135deg, #0088cc, #005f8f); margin-bottom:15px; width:100%;" 
+                onclick="window.open('https://t.me/+8uz4Rc7Na-hlYmU8', '_blank')">
+                <span><i class="fab fa-telegram-plane"></i> Join Group</span>
+                <i class="fas fa-external-link-alt"></i>
+            </button>
+
+            <button class="me-btn" style="background: linear-gradient(135deg, #2AABEE, #229ED9); width:100%;" 
+                onclick="window.open('https://t.me/english_premierleagueI', '_blank')">
+                <span><i class="fas fa-bullhorn"></i> Subscribe Channel</span>
+                <i class="fas fa-external-link-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="toast">Message</div>
+
+    <script>
+        // --- 1. FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCpjM4ag00NcQOu13eYA_U8txHMY80hPC0",
+            authDomain: "nbaa-8b8fe.firebaseapp.com",
+            databaseURL: "https://nbaa-8b8fe-default-rtdb.firebaseio.com",
+            projectId: "nbaa-8b8fe",
+            storageBucket: "nbaa-8b8fe.firebasestorage.app",
+            messagingSenderId: "1007670379274",
+            appId: "1:1007670379274:web:db06072796fdc5748270f3",
+            measurementId: "G-NXJEQTP1QE"
+        };
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let currentUser = null;
+        let isLogin = true;
+        
+        // --- GLOBAL DEPOSIT VARIABLES ---
+        let selectedBankData = null;
+        let selectedDepositAmount = 0;
+
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const refCode = urlParams.get('ref');
+            if(refCode) {
+                toggleAuth(); 
+                document.getElementById('authRef').value = refCode;
+            }
+        };
+
+        // --- AUTH ---
+        function toggleAuth() {
+            isLogin = !isLogin;
+            document.getElementById('authTitle').innerText = isLogin ? 'Login' : 'Create Account';
+            document.getElementById('authBtn').innerText = isLogin ? 'LOGIN' : 'REGISTER';
+            document.getElementById('switchText').innerText = isLogin ? 'New here? ' : 'Have account? ';
+            document.querySelector('.auth-switch a').innerText = isLogin ? 'Create Account' : 'Login';
+            document.getElementById('authConfirmPass').style.display = isLogin ? 'none' : 'block';
+            document.getElementById('authRef').style.display = isLogin ? 'none' : 'block';
+            document.getElementById('authMessage').innerText = "";
+        }
+
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const phone = document.getElementById('authPhone').value;
+            const pass = document.getElementById('authPass').value;
+            const msg = document.getElementById('authMessage');
+            msg.innerText = "Processing...";
+
+            // ADMIN LOGIN
+            if(phone === "1221" && pass === "a2213") {
+                document.getElementById('authSection').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                loadAdminMethodsList(); 
+                loadDepositRequests(); 
+                loadWithdrawRequests();
+                loadAdminPlans(); // NEW: Load Plans for Management
+                return;
+            }
+
+            const dbKey = "u_" + phone;
+            if (isLogin) {
+                db.ref('users/' + dbKey).once('value', snapshot => {
+                    if (snapshot.exists() && snapshot.val().pass === pass) loginSuccess(snapshot.val());
+                    else msg.innerText = "Invalid Phone or Password!";
+                });
+            } else {
+                const confirm = document.getElementById('authConfirmPass').value;
+                if (pass !== confirm) { msg.innerText = "Passwords do not match!"; return; }
+                db.ref('users/' + dbKey).once('value', snapshot => {
+                    if (snapshot.exists()) { msg.innerText = "Account already exists!"; } else {
+                        const newUser = {
+                            phone: phone, pass: pass, balance: 20, 
+                            refCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+                            refBy: document.getElementById('authRef').value || "Admin",
+                            joinDate: new Date().toISOString()
+                        };
+                        
+                        db.ref('users/' + dbKey).set(newUser).then(() => {
+                            
+                            // --- NEW LOGIC: WELCOME PLAN THAT WAITS FOR ADMIN ---
+                            
+                            // 1. Get the current Admin Session ID (To lock the claim button)
+                            db.ref('adminSettings/claimSessionId').once('value', sessSnap => {
+                                const currentSession = sessSnap.val() || "init"; // Get CURRENT active session
+                                
+                                // 2. Create the Welcome Plan Object
+                                const welcomePlan = {
+                                    pid: 'welcome_plan',
+                                    name: '🔥 Welcome VIP',
+                                    price: 0,         // Free
+                                    daily: 30,        // 30 ETB Daily
+                                    days: 4,          // 4 Days
+                                    logo: 'https://cdn-icons-png.flaticon.com/512/744/744922.png',
+                                    date: Date.now(),
+                                    // CRITICAL: Set this to currentSession. 
+                                    // This means "You already claimed for THIS session" (even though they just got it).
+                                    // Result: Button shows "Wait for Admin" until Admin releases NEW session.
+                                    lastClaimedSession: currentSession 
+                                };
+
+                                // 3. Push to database
+                                db.ref('investments/' + dbKey).push(welcomePlan);
+
+                                alert("Account Created! 20 ETB Bonus + Welcome Plan Added (Wait for Admin to Claim).");
+                                loginSuccess(newUser);
+                            });
+                        });
+                    }
+                });
+            }
+        });
+
+        function loginSuccess(user) {
+            currentUser = user;
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            loadUserData();
+            loadProfileStats(); // NEW: Load Profile Statistics (Deposit/Withdraw)
+            loadPlans();
+            loadNews(); 
+            loadUserPaymentMethods(); 
+            loadTeamList(1, document.querySelectorAll('.team-filter-btn')[0]); 
+        }
+
+        function loadUserData() {
+            if(!currentUser) return;
+            db.ref('users/u_' + currentUser.phone).on('value', snap => {
+                const u = snap.val();
+                currentUser = u;
+                document.getElementById('userBalance').innerText = u.balance.toFixed(2);
+                document.getElementById('withUserBalance').innerText = u.balance.toFixed(2); 
+                document.getElementById('profilePhone').innerText = "+251 " + u.phone;
+                
+                // NEW: SET USER ID (Using refCode)
+                document.getElementById('userProfileID').innerText = u.refCode || u.phone;
+
+                // NEW: Display Total Accumulated Commission
+                // Defaults to 0 if not yet set in DB
+                document.getElementById('teamComm').innerText = (u.totalCommission || 0).toFixed(2);
+
+                document.getElementById('myRefCode').innerText = u.refCode || "Generate...";
+                loadMyInvestments();
+            });
+        }
+        function logout() { location.reload(); }
+
+        // --- NEW FUNCTION: LOAD PROFILE STATS (RECHARGE/WITHDRAW) ---
+        function loadProfileStats() {
+            if(!currentUser) return;
+            const userId = "u_" + currentUser.phone;
+
+            // 1. Calculate Total Recharged (Approved Deposits)
+            db.ref('deposit_requests').orderByChild('userId').equalTo(userId).on('value', snap => {
+                let totalDep = 0;
+                if(snap.exists()) {
+                    snap.forEach(child => {
+                        const d = child.val();
+                        if(d.status === 'approved') {
+                            totalDep += Number(d.amount);
+                        }
+                    });
+                }
+                document.getElementById('meRecharge').innerText = totalDep.toFixed(0);
+            });
+
+            // 2. Calculate Total Withdrawn (Approved Withdraws)
+            db.ref('withdraws').orderByChild('userId').equalTo(userId).on('value', snap => {
+                let totalWith = 0;
+                if(snap.exists()) {
+                    snap.forEach(child => {
+                        const w = child.val();
+                        if(w.status === 'approved') {
+                            totalWith += Number(w.amount);
+                        }
+                    });
+                }
+                document.getElementById('meWithdraw').innerText = totalWith.toFixed(0);
+            });
+        }
+        
+        // --- NAVIGATION ---
+        function switchPage(pageId, btn) {
+            document.querySelectorAll('.page-section').forEach(p => p.style.display = 'none');
+            document.getElementById(pageId).style.display = 'block';
+            
+            const navbar = document.getElementById('mainNavbar');
+            const mainHeader = document.getElementById('mainHeader');
+            
+            // Handle loading logic for Task Page
+            if(pageId === 'taskPage') {
+                loadTaskData();
+            }
+
+            // HIDE NAVBAR FOR SUB-PAGES
+            // Included 'marketPage' and 'taskPage' in the hidden list
+            if (pageId === 'depositPage' || pageId === 'investPage' || pageId === 'marketPage' || pageId === 'taskPage' || pageId === 'recordPage' || pageId === 'withdrawPage' || pageId === 'aboutPage' || pageId === 'giftPage') {
+                navbar.style.display = 'none';
+                mainHeader.style.display = 'none';
+            } else {
+                navbar.style.display = 'flex';
+                mainHeader.style.display = 'flex';
+                if(btn) {
+                    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                    btn.classList.add('active');
+                }
+            }
+        }
+
+        // --- NEWS FUNCTIONALITY ---
+        function loadNews() {
+            const container = document.getElementById('newsContainer');
+            const newsData = [
+                { title: "Jordan Brand announces new Retro High OG Release Date", img: "https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2070", tag: "Release", date: "2 hours ago" },
+                { title: "Lakers vs Celtics: NBA Finals Prediction and Analysis", img: "https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090", tag: "NBA", date: "5 hours ago" },
+                { title: "Nike Ja 1 'Scratch' Official Images Leaked online", img: "https://images.unsplash.com/photo-1512314889357-e157c22f938d?q=80&w=2071", tag: "Sneakers", date: "Today" },
+                { title: "Curry 10 'Iron Sharpens Iron' hitting stores next week", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2070", tag: "Market", date: "Yesterday" }
+            ];
+
+            container.innerHTML = "";
+            newsData.forEach(news => {
+                const html = `
+                <div class="news-card">
+                    <img src="${news.img}" class="news-img">
+                    <div class="news-content">
+                        <div class="news-title">${news.title}</div>
+                        <div class="news-meta">
+                            <span class="news-tag">${news.tag}</span>
+                            <span>${news.date}</span>
+                        </div>
+                    </div>
+                </div>`;
+                container.innerHTML += html;
+            });
+        }
+
+
+        // --- PLANS & INVEST (UPDATED FOR MARKET PAGE) ---
+        function loadPlans() {
+            const container = document.getElementById('plansContainer'); // Home Page
+            const marketContainer = document.getElementById('marketPlansContainer'); // New Market Page
+
+            db.ref('plans').on('value', snap => {
+                const plans = snap.val();
+                let htmlContent = "";
+                
+                if(!plans) { 
+                    htmlContent = "<p>No plans available.</p>"; 
+                } else {
+                    Object.keys(plans).forEach(pid => {
+                        const p = plans[pid];
+                        htmlContent += `
+                        <div class="plan-card">
+                            <div class="plan-img-box"><img src="${p.logo}" alt="Shoe"></div>
+                            <div class="plan-info">
+                                <div class="plan-name">${p.name}</div>
+                                <div class="plan-price">${p.price} ETB</div>
+                                <div class="plan-details"><span>${p.daily} ETB/day</span><span>${p.days} days</span></div>
+                                <button class="invest-btn" onclick="buyPlan('${pid}', '${p.name}', ${p.price}, ${p.daily}, ${p.days}, '${p.logo}')">INVEST NOW</button>
+                            </div>
+                        </div>`;
+                    });
+                }
+                
+                // Populate BOTH containers with the same Admin Plans
+                if(container) container.innerHTML = htmlContent;
+                if(marketContainer) marketContainer.innerHTML = htmlContent;
+            });
+        }
+
+        function buyPlan(pid, name, price, daily, days, logo) {
+            if(currentUser.balance < price) { showToast("Insufficient Balance!"); return; }
+            
+            if(confirm(`Invest ${price} ETB in ${name}?`)) {
+                
+                // --- MODIFICATION: FETCH CURRENT SESSION TO PREVENT INSTANT CLAIM ---
+                db.ref('adminSettings/claimSessionId').once('value', sessSnap => {
+                    const currentSession = sessSnap.val() || "init"; // Get current session ID
+
+                    // 1. Deduct Balance
+                    const newBal = currentUser.balance - price;
+                    db.ref('users/u_' + currentUser.phone).update({ balance: newBal });
+                    
+                    // 2. Add to Investments (Set lastClaimedSession to CURRENT session)
+                    // This forces the user to wait until the session CHANGES (Next admin release)
+                    db.ref('investments/u_' + currentUser.phone).push({
+                        pid, name, price, daily, days, logo, date: Date.now(), 
+                        lastClaimedSession: currentSession // <--- User cannot claim now, must wait for next release
+                    });
+
+                    // 3. CHECK FIRST INVESTMENT BONUS (One time 12% on invest)
+                    db.ref('investments/u_' + currentUser.phone).once('value', snap => {
+                        if (snap.numChildren() === 1) {
+                            // Give 12% Bonus to DIRECT Referrer ONLY (Level 1)
+                            distributeOneTimeBonus(currentUser.refBy, price);
+                        }
+                    });
+
+                    showToast("Investment Successful!");
+                    switchPage('investPage');
+                });
+            }
+        }
+
+        // --- REFACTORED COMMISSION LOGIC ---
+
+        // 1. One Time Bonus (12% of Investment for First Time)
+        function distributeOneTimeBonus(refCode, amount) {
+            if(!refCode || refCode === "Admin") return;
+            // Find the referrer
+            db.ref('users').orderByChild('refCode').equalTo(refCode).once('value', snapshot => {
+                if (snapshot.exists()) {
+                    snapshot.forEach(childSnap => {
+                        const upline = childSnap.val();
+                        // 12% Bonus
+                        const bonus = amount * 0.12;
+                        
+                        // NEW: Update both Balance AND totalCommission
+                        const currentTotalComm = upline.totalCommission || 0;
+                        
+                        db.ref('users/' + childSnap.key).update({ 
+                            balance: upline.balance + bonus,
+                            totalCommission: currentTotalComm + bonus 
+                        });
+                    });
+                }
+            });
+        }
+
+        // 2. Daily Profit Commission (12% - 5% - 2%)
+        function distributeDailyCommission(refCode, dailyProfit, level) {
+            if(!refCode || refCode === "Admin" || level > 3) return;
+            
+            db.ref('users').orderByChild('refCode').equalTo(refCode).once('value', snapshot => {
+                if (snapshot.exists()) {
+                    snapshot.forEach(childSnap => {
+                        const upline = childSnap.val();
+                        let rate = 0;
+                        
+                        // Set Rates based on Level
+                        if(level === 1) rate = 0.12; // 12%
+                        if(level === 2) rate = 0.05; // 5%
+                        if(level === 3) rate = 0.02; // 2%
+
+                        if(rate > 0) {
+                            const comm = dailyProfit * rate;
+                            
+                            // NEW: Update both Balance AND totalCommission
+                            const currentTotalComm = upline.totalCommission || 0;
+                            
+                            db.ref('users/' + childSnap.key).update({ 
+                                balance: upline.balance + comm,
+                                totalCommission: currentTotalComm + comm
+                            });
+                            
+                            // Recursive call for next level
+                            distributeDailyCommission(upline.refBy, dailyProfit, level + 1);
+                        }
+                    });
+                }
+            });
+        }
+
+        function loadMyInvestments() {
+            const list = document.getElementById('myInvestmentsList');
+            db.ref('adminSettings/claimSessionId').on('value', sessSnap => {
+                const currentSession = sessSnap.val() || "no_session";
+                db.ref('investments/u_' + currentUser.phone).on('value', snap => {
+                    list.innerHTML = "";
+                    const invs = snap.val();
+                    if(!invs) { 
+                        list.innerHTML = '<p style="text-align:center; color:#999; margin-top:30px;">No sneakers collected yet.</p>'; 
+                        document.getElementById('dailyRev').innerText = "0.00"; return; 
+                    }
+                    let totalDaily = 0;
+                    Object.keys(invs).forEach(id => {
+                        const inv = invs[id];
+                        totalDaily += inv.daily;
+                        const canClaim = (inv.lastClaimedSession !== currentSession);
+                        const btnHtml = canClaim 
+                            ? `<button onclick="claimProfit('${id}', ${inv.daily})" style="background:#4CAF50; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">CLAIM ${inv.daily}</button>`
+                            : `<button style="background:#eee; color:#999; border:none; padding:8px 12px; border-radius:5px;">Wait for Admin</button>`;
+                        list.innerHTML += `
+                        <div style="background:white; margin-bottom:10px; border-radius:10px; padding:10px; display:flex; align-items:center; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                            <img src="${inv.logo}" style="width:50px; height:50px; object-fit:cover; border-radius:5px; margin-right:10px;">
+                            <div style="flex-grow:1;"><div style="font-weight:bold;">${inv.name}</div><div style="font-size:0.8em;">Profit: ${inv.daily}/day</div></div>
+                            ${btnHtml}
+                        </div>`;
+                    });
+                    document.getElementById('dailyRev').innerText = totalDaily.toFixed(2);
+                });
+            });
+        }
+
+        function claimProfit(invId, amount) {
+            db.ref('adminSettings/claimSessionId').once('value', sessSnap => {
+                // 1. Give User their daily profit
+                db.ref('users/u_' + currentUser.phone).update({ balance: currentUser.balance + amount });
+                
+                // 2. Mark as claimed
+                db.ref('investments/u_' + currentUser.phone + '/' + invId).update({ lastClaimedSession: sessSnap.val() });
+                
+                // 3. DISTRIBUTE TEAM COMMISSION (Daily)
+                // Level 1: 12%, Level 2: 5%, Level 3: 2% of the DAILY PROFIT amount
+                distributeDailyCommission(currentUser.refBy, amount, 1);
+
+                showToast(`Collected ${amount} ETB!`);
+            });
+        }
+
+        // --- DAILY CHECK-IN WITH POPUP ---
+        function dailyCheckIn() {
+            if(!currentUser) return;
+            const today = new Date().toDateString(); // e.g. "Mon Jan 01 2026"
+            
+            if(currentUser.lastCheckIn === today) {
+                showToast("Already Checked-in Today!");
+                return;
+            }
+
+            // Open Modal
+            const modal = document.getElementById('checkinModal');
+            const timerText = document.getElementById('checkinTimer');
+            modal.style.display = 'block';
+
+            // Start Countdown
+            let timeLeft = 15;
+            timerText.innerText = `Please wait ${timeLeft}s`;
+
+            const countdown = setInterval(() => {
+                timeLeft--;
+                timerText.innerText = `Please wait ${timeLeft}s`;
+                if(timeLeft <= 0) clearInterval(countdown);
+            }, 1000);
+
+            // Wait 15 seconds before giving reward
+            setTimeout(() => {
+                // Close Modal
+                modal.style.display = 'none';
+
+                // Give Reward (2 ETB)
+                const reward = 2; // Reward Amount
+                const newBal = (currentUser.balance || 0) + reward;
+
+                db.ref('users/u_' + currentUser.phone).update({
+                    balance: newBal,
+                    lastCheckIn: today
+                }).then(() => {
+                    showToast(`+${reward} ETB Daily Bonus!`);
+                });
+            }, 15000); // 15000 milliseconds = 15 Seconds
+        }
+
+        // --- NEW GIFT CODE LOGIC WITH CONGRATS POPUP ---
+        function submitGiftCode() {
+            const codeInput = document.getElementById('giftCodeInput');
+            const code = codeInput.value.trim().toUpperCase();
+
+            if(!code) { showToast("Please Enter a Code"); return; }
+
+            // Check if code exists in DB
+            db.ref('giftCodes/' + code).once('value', snap => {
+                if(!snap.exists()) {
+                    showToast("Invalid Gift Code!");
+                    return;
+                }
+
+                const data = snap.val();
+
+                // 1. Check Usage Limit
+                if(data.usage <= 0) {
+                    showToast("Code Fully Redeemed!");
+                    return;
+                }
+
+                // 2. Give Reward
+                const newBal = (currentUser.balance || 0) + data.amount;
+                
+                db.ref('users/u_' + currentUser.phone).update({ balance: newBal });
+                
+                // 3. Decrement Usage Count
+                db.ref('giftCodes/' + code).update({ usage: data.usage - 1 });
+
+                // 4. SHOW CONGRATULATIONS MODAL
+                document.getElementById('congratsAmount').innerText = data.amount + " ETB";
+                document.getElementById('giftCodeInput').value = "";
+                openModal('congratsModal');
+            });
+        }
+
+        function createGiftCode() {
+            const code = document.getElementById('admGiftCode').value.trim().toUpperCase();
+            const amount = Number(document.getElementById('admGiftAmount').value);
+            const usage = Number(document.getElementById('admGiftUsage').value);
+
+            if(!code || !amount || !usage) { alert("Fill all fields"); return; }
+
+            db.ref('giftCodes/' + code).set({
+                amount: amount,
+                usage: usage,
+                createdAt: Date.now()
+            }).then(() => {
+                alert(`Gift Code ${code} Created!`);
+                document.getElementById('admGiftCode').value = "";
+                document.getElementById('admGiftAmount').value = "";
+                document.getElementById('admGiftUsage').value = "";
+            });
+        }
+
+
+        // --- TEAM LOGIC (FETCH AND FILTER) ---
+        function loadTeamList(level, btn) {
+            if(!currentUser) return;
+            
+            // UI Update
+            document.querySelectorAll('.team-filter-btn').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+            
+            const container = document.getElementById('teamListContainer');
+            container.innerHTML = '<p style="text-align:center; color:#999;">Fetching data...</p>';
+
+            // Fetch All Users & Investments
+            Promise.all([
+                db.ref('users').once('value'),
+                db.ref('investments').once('value')
+            ]).then(([usersSnap, invSnap]) => {
+                const users = usersSnap.val() || {};
+                const investments = invSnap.val() || {};
+                
+                const myCode = currentUser.refCode;
+
+                // --- Calculate All Levels & Stats ---
+                
+                // L1: Direct Referrals
+                const l1Users = Object.values(users).filter(u => u.refBy === myCode);
+                
+                // L2: Referrals of L1
+                const l1Codes = l1Users.map(u => u.refCode);
+                const l2Users = Object.values(users).filter(u => l1Codes.includes(u.refBy));
+
+                // L3: Referrals of L2
+                const l2Codes = l2Users.map(u => u.refCode);
+                const l3Users = Object.values(users).filter(u => l2Codes.includes(u.refBy));
+
+                // Helper to count active members (those who have an investment entry)
+                const countActive = (list) => {
+                    return list.filter(u => investments["u_" + u.phone]).length;
+                };
+
+                // UPDATE STATS ON UI
+                document.getElementById('cntL1').innerText = countActive(l1Users);
+                document.getElementById('cntL2').innerText = countActive(l2Users);
+                document.getElementById('cntL3').innerText = countActive(l3Users);
+
+                // --- RENDER SELECTED LEVEL LIST ---
+                let targetList = [];
+                if (level === 1) targetList = l1Users;
+                else if (level === 2) targetList = l2Users;
+                else if (level === 3) targetList = l3Users;
+
+                container.innerHTML = "";
+                if (targetList.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">No members found in this level.</p>';
+                    return;
+                }
+
+                targetList.forEach(member => {
+                    const hasInvested = investments["u_" + member.phone] ? true : false;
+                    const statusClass = hasInvested ? "status-active" : "status-inactive";
+                    const statusText = hasInvested ? "VIP Investor" : "Member";
+                    const badgeClass = hasInvested ? "active" : "inactive";
+
+                    const html = `
+                    <div class="member-card ${statusClass}">
+                        <div class="member-info">
+                            <h4>User: ${member.phone}</h4>
+                            <p>Joined: ${new Date(member.joinDate).toLocaleDateString()}</p>
+                        </div>
+                        <div class="status-badge ${badgeClass}">
+                            ${statusText}
+                        </div>
+                    </div>`;
+                    container.innerHTML += html;
+                });
+            });
+        }
+
+        // --- TRANSACTION RECORD LOGIC ---
+        let allRecords = [];
+
+        function openRecordPage() {
+            switchPage('recordPage');
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.filter-btn')[0].classList.add('active'); // Select All
+            loadTransactions('all');
+        }
+
+        function loadTransactions(filterType, btn) {
+            if(btn) {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+
+            const container = document.getElementById('recordList');
+            container.innerHTML = '<p style="text-align:center; color:#999;">Fetching history...</p>';
+
+            const userId = "u_" + currentUser.phone;
+
+            Promise.all([
+                db.ref('deposit_requests').orderByChild('userId').equalTo(userId).once('value'),
+                db.ref('withdraws').orderByChild('userId').equalTo(userId).once('value'), 
+                db.ref('investments/' + userId).once('value')
+            ]).then(([depSnap, withSnap, invSnap]) => {
+                allRecords = [];
+
+                // 1. Deposits
+                if(depSnap.exists()) {
+                    depSnap.forEach(child => {
+                        const d = child.val();
+                        allRecords.push({
+                            type: 'deposit',
+                            title: 'Deposit (' + d.method + ')',
+                            amount: '+' + d.amount,
+                            date: new Date(d.date).getTime(),
+                            dateStr: new Date(d.date).toLocaleDateString() + ' ' + new Date(d.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                            status: d.status
+                        });
+                    });
+                }
+
+                // 2. Withdraws
+                if(withSnap.exists()) {
+                    withSnap.forEach(child => {
+                        const w = child.val();
+                        allRecords.push({
+                            type: 'withdraw',
+                            title: 'Withdrawal',
+                            amount: '-' + w.amount,
+                            date: new Date(w.date).getTime(),
+                            dateStr: new Date(w.date).toLocaleDateString() + ' ' + new Date(w.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                            status: w.status || 'pending'
+                        });
+                    });
+                }
+
+                // 3. Investments
+                if(invSnap.exists()) {
+                    invSnap.forEach(child => {
+                        const i = child.val();
+                        allRecords.push({
+                            type: 'invest',
+                            title: 'Buy: ' + i.name,
+                            amount: '-' + i.price,
+                            date: i.date,
+                            dateStr: new Date(i.date).toLocaleDateString(),
+                            status: 'success'
+                        });
+                    });
+                }
+
+                // Sort by Date (Newest First)
+                allRecords.sort((a, b) => b.date - a.date);
+
+                renderRecords(filterType);
+            });
+        }
+
+        function filterRecords(type, btn) {
+            if(btn) {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+            renderRecords(type);
+        }
+
+        function renderRecords(filterType) {
+            const container = document.getElementById('recordList');
+            container.innerHTML = "";
+
+            const filtered = filterType === 'all' 
+                ? allRecords 
+                : allRecords.filter(r => r.type === filterType);
+
+            if(filtered.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">No records found.</p>';
+                return;
+            }
+
+            filtered.forEach(rec => {
+                let statusClass = 'st-pending';
+                if(rec.status === 'approved' || rec.status === 'success') statusClass = 'st-success';
+                if(rec.status === 'rejected') statusClass = 'st-rejected';
+
+                let displayStatus = rec.status.toUpperCase();
+
+                const html = `
+                <div class="record-card type-${rec.type}">
+                    <div class="rec-info">
+                        <h4>${rec.title}</h4>
+                        <small>${rec.dateStr}</small>
+                        <div><span class="rec-status ${statusClass}">${displayStatus}</span></div>
+                    </div>
+                    <div class="rec-amount" style="color: ${rec.amount.includes('+') ? '#4CAF50' : '#333'}">
+                        ${rec.amount}
+                    </div>
+                </div>`;
+                container.innerHTML += html;
+            });
+        }
+
+
+        // --- ADMIN FUNCTIONS ---
+        function selectLogo(el, url) {
+            document.querySelectorAll('.logo-option').forEach(d => d.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('pLogoUrl').value = url; 
+        }
+        
+        // --- NEW: UPDATED ADD/EDIT PLAN LOGIC ---
+        function loadAdminPlans() {
+            const container = document.getElementById('adminPlanListContainer');
+            db.ref('plans').on('value', snap => {
+                container.innerHTML = "";
+                const plans = snap.val();
+                if(!plans) { container.innerHTML = "<p>No plans created yet.</p>"; return; }
+                
+                Object.keys(plans).forEach(key => {
+                    const p = plans[key];
+                    container.innerHTML += `
+                    <div class="admin-list-item">
+                        <div style="display:flex; align-items:center;">
+                            <img src="${p.logo}" style="width:40px; height:40px; border-radius:5px; margin-right:10px; object-fit:cover;">
+                            <div>
+                                <strong>${p.name}</strong><br>
+                                <small>${p.price} ETB | ${p.daily}/day</small>
+                            </div>
+                        </div>
+                        <div>
+                            <button style="background:#2196F3; color:white; margin-right:5px;" 
+                                onclick="editPlan('${key}', '${p.name}', ${p.price}, ${p.daily}, ${p.days}, '${p.logo}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button style="background:#F44336; color:white;" 
+                                onclick="deletePlan('${key}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>`;
+                });
+            });
+        }
+
+        function addPlan() {
+            // Get Values
+            const id = document.getElementById('pId').value;
+            const name = document.getElementById('pName').value;
+            const price = Number(document.getElementById('pPrice').value);
+            const daily = Number(document.getElementById('pDaily').value);
+            const days = Number(document.getElementById('pDays').value);
+            const logo = document.getElementById('pLogoUrl').value;
+
+            if(!name || !price) { alert("Please fill details"); return; }
+            
+            if(id) {
+                // UPDATE MODE
+                db.ref('plans/' + id).update({ name, price, daily, days, logo }).then(() => {
+                    alert("Plan Updated Successfully!");
+                    resetPlanForm();
+                });
+            } else {
+                // CREATE MODE
+                db.ref('plans').push({ name, price, daily, days, logo }).then(() => {
+                    alert("Plan Added Successfully!");
+                    resetPlanForm();
+                });
+            }
+        }
+
+        function editPlan(key, name, price, daily, days, logo) {
+            document.getElementById('pId').value = key;
+            document.getElementById('pName').value = name;
+            document.getElementById('pPrice').value = price;
+            document.getElementById('pDaily').value = daily;
+            document.getElementById('pDays').value = days;
+            document.getElementById('pLogoUrl').value = logo;
+            
+            // Change UI to Edit Mode
+            document.getElementById('btnPlanAction').innerText = "Update Plan";
+            document.getElementById('btnPlanAction').style.background = "#2196F3";
+            document.getElementById('btnPlanCancel').style.display = "block";
+        }
+
+        function deletePlan(key) {
+            if(confirm("Are you sure you want to delete this plan? It will be removed from the market.")) {
+                db.ref('plans/' + key).remove();
+            }
+        }
+
+        function resetPlanForm() {
+            document.getElementById('pId').value = "";
+            document.getElementById('pName').value = "";
+            document.getElementById('pPrice').value = "";
+            document.getElementById('pDaily').value = "";
+            document.getElementById('pDays').value = "";
+            document.getElementById('pLogoUrl').value = "";
+            
+            // Reset Buttons
+            document.getElementById('btnPlanAction').innerText = "Publish Plan";
+            document.getElementById('btnPlanAction').style.background = "linear-gradient(135deg, #FF5722 0%, #FF8A50 100%)";
+            document.getElementById('btnPlanCancel').style.display = "none";
+        }
+
+        function releaseProfit() {
+            if(confirm("Release Profit?")) db.ref('adminSettings/claimSessionId').set("SESS_" + Date.now());
+        }
+
+        // --- ADMIN: SET VERIFICATION CODE ---
+        function adminSetVerification() {
+            const phone = document.getElementById('admBindPhone').value;
+            const code = document.getElementById('admBindCode').value;
+
+            if(!phone || !code) { alert("Please enter both phone and code"); return; }
+            
+            // Save code to user's profile in database
+            db.ref('users/u_' + phone).update({ bindCode: code }).then(() => {
+                alert(`Code ${code} set for user ${phone}.`);
+                document.getElementById('admBindCode').value = "";
+            }).catch(err => {
+                alert("User not found or error occurred.");
+            });
+        }
+
+        // --- NEW: ADMIN ASSIGN TASK REWARD ---
+        function assignTask() {
+            const phone = document.getElementById('admTaskPhone').value;
+            const amount = Number(document.getElementById('admTaskAmount').value);
+            const desc = document.getElementById('admTaskDesc').value || "Special Admin Reward";
+
+            if(!phone || !amount) { alert("Please enter user phone and amount."); return; }
+
+            // Push to task_rewards/{userId}
+            db.ref('task_rewards/u_' + phone).push({
+                amount: amount,
+                desc: desc,
+                status: 'pending',
+                date: Date.now()
+            }).then(() => {
+                alert("Reward Task Sent Successfully!");
+                document.getElementById('admTaskPhone').value = "";
+                document.getElementById('admTaskAmount').value = "";
+            });
+        }
+
+        // --- NEW: USER LOAD & CLAIM TASK ---
+        function loadTaskData() {
+            if(!currentUser) return;
+            const container = document.getElementById('taskContainer');
+            
+            db.ref('task_rewards/u_' + currentUser.phone).on('value', snap => {
+                container.innerHTML = "";
+                const tasks = snap.val();
+                
+                if(!tasks) { 
+                    container.innerHTML = '<div style="background:#f5f5f5; padding:20px; border-radius:10px; text-align:center; color:#888;">No tasks available right now.</div>';
+                    return; 
+                }
+
+                let hasPending = false;
+
+                Object.keys(tasks).forEach(key => {
+                    const t = tasks[key];
+                    if(t.status === 'pending') {
+                        hasPending = true;
+                        container.innerHTML += `
+                        <div style="background:white; border-radius:12px; padding:20px; box-shadow:0 5px 15px rgba(0,0,0,0.05); border:1px solid #eee;">
+                            <h3 style="margin:0 0 5px 0; color:var(--secondary-color);">${t.desc}</h3>
+                            <div style="font-size:2em; font-weight:bold; color:#673AB7; margin:10px 0;">+${t.amount} ETB</div>
+                            <button onclick="claimTaskReward('${key}', ${t.amount})" style="width:100%; padding:15px; background:linear-gradient(135deg, #673AB7, #9575CD); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer; font-size:1.1em; box-shadow:0 4px 10px rgba(103, 58, 183, 0.3);">
+                                Claim Reward <i class="fas fa-check-circle"></i>
+                            </button>
+                        </div>`;
+                    }
+                });
+
+                if(!hasPending) {
+                    container.innerHTML = '<div style="background:#e8f5e9; padding:20px; border-radius:10px; text-align:center; color:#2e7d32;"><i class="fas fa-check-double"></i> All tasks completed!</div>';
+                }
+            });
+        }
+
+        function claimTaskReward(key, amount) {
+            // 1. Update Balance
+            const newBal = (currentUser.balance || 0) + amount;
+            db.ref('users/u_' + currentUser.phone).update({ balance: newBal });
+
+            // 2. Mark task as claimed (or remove it)
+            // Option A: Remove it to keep DB clean
+            db.ref('task_rewards/u_' + currentUser.phone + '/' + key).remove();
+            
+            // 3. Show Congratulations Modal
+            document.getElementById('congratsAmount').innerText = amount + " ETB";
+            openModal('congratsModal');
+        }
+
+
+        // --- ADMIN: PAYMENT METHODS ---
+        function loadAdminMethodsList() {
+            const list = document.getElementById('adminBankList');
+            db.ref('adminSettings/paymentMethods').on('value', snap => {
+                list.innerHTML = "";
+                const data = snap.val();
+                if(!data) { list.innerHTML = "<p>No methods added.</p>"; return; }
+                
+                Object.keys(data).forEach(key => {
+                    const d = data[key];
+                    list.innerHTML += `
+                    <div class="admin-list-item">
+                        <div>
+                            <strong>${d.type}</strong><br>
+                            <small>${d.name} - ${d.num}</small>
+                        </div>
+                        <button onclick="deletePaymentMethod('${key}')"><i class="fas fa-trash"></i></button>
+                    </div>`;
+                });
+            });
+        }
+
+        function addPaymentMethod() {
+            const type = document.getElementById('admBankType').value;
+            const name = document.getElementById('admBankName').value;
+            const num = document.getElementById('admBankNum').value;
+            
+            if(!type || !num) { alert("Fill details"); return; }
+            
+            db.ref('adminSettings/paymentMethods').push({ type, name, num });
+            alert("Payment Method Added!");
+            document.getElementById('admBankType').value = "";
+            document.getElementById('admBankNum').value = "";
+        }
+
+        function deletePaymentMethod(key) {
+            if(confirm("Are you sure you want to delete this payment method?")) {
+                db.ref('adminSettings/paymentMethods/' + key).remove();
+            }
+        }
+
+        // --- ADMIN: DEPOSIT APPROVAL SYSTEM ---
+        function loadDepositRequests() {
+            const list = document.getElementById('adminDepositList');
+            db.ref('deposit_requests').orderByChild('status').equalTo('pending').on('value', snap => {
+                list.innerHTML = "";
+                const reqs = snap.val();
+                if(!reqs) { list.innerHTML = "<p>No pending deposits.</p>"; return; }
+                
+                Object.keys(reqs).forEach(key => {
+                    const r = reqs[key];
+                    list.innerHTML += `
+                    <div class="admin-deposit-item">
+                        <div style="display:flex; justify-content:space-between;">
+                            <strong>+${r.amount} ETB</strong>
+                            <span style="color:#2196F3; font-size:0.8em;">${r.method}</span>
+                        </div>
+                        <div style="font-size:0.85em; color:#555; margin:5px 0;">
+                            User: ${r.phone}<br>
+                            TID: <strong>${r.tid}</strong>
+                        </div>
+                        <div class="dep-btn-group">
+                            <button class="dep-btn-approve" onclick="approveDeposit('${key}', '${r.phone}', ${r.amount})">Approve</button>
+                            <button class="dep-btn-reject" onclick="rejectDeposit('${key}')">Reject</button>
+                        </div>
+                    </div>`;
+                });
+            });
+        }
+
+        function approveDeposit(reqKey, userPhone, amount) {
+            if(confirm(`Approve deposit of ${amount} ETB for ${userPhone}?`)) {
+                // 1. Get current user balance
+                db.ref('users/u_' + userPhone).once('value', snap => {
+                    if(snap.exists()) {
+                        const currentBal = snap.val().balance || 0;
+                        const newBal = currentBal + amount;
+                        
+                        // 2. Update Balance
+                        db.ref('users/u_' + userPhone).update({ balance: newBal });
+                        
+                        // 3. Mark Request as Approved
+                        db.ref('deposit_requests/' + reqKey).update({ status: 'approved' });
+                        
+                        alert("Deposit Approved!");
+                    } else {
+                        alert("User not found!");
+                    }
+                });
+            }
+        }
+
+        function rejectDeposit(reqKey) {
+            if(confirm("Reject this deposit request?")) {
+                db.ref('deposit_requests/' + reqKey).update({ status: 'rejected' });
+            }
+        }
+
+        // --- NEW: ADMIN WITHDRAW APPROVAL SYSTEM ---
+        function loadWithdrawRequests() {
+            const list = document.getElementById('adminWithdrawList');
+            db.ref('withdraws').orderByChild('status').equalTo('pending').on('value', snap => {
+                list.innerHTML = "";
+                const reqs = snap.val();
+                if(!reqs) { list.innerHTML = "<p>No pending withdrawals.</p>"; return; }
+                
+                Object.keys(reqs).forEach(key => {
+                    const r = reqs[key];
+                    const bankInfo = r.bank ? `<br><b>${r.bank.name}</b> (${r.bank.type})<br>${r.bank.num}` : "<br>No Bank Info";
+                    
+                    list.innerHTML += `
+                    <div class="admin-deposit-item">
+                        <div style="display:flex; justify-content:space-between;">
+                            <strong>-${r.amount} ETB</strong>
+                            <span style="color:#F44336; font-size:0.8em;">Withdraw</span>
+                        </div>
+                        <div style="font-size:0.85em; color:#555; margin:5px 0;">
+                            User: ${r.userId.replace('u_', '')}
+                            ${bankInfo}
+                        </div>
+                        <div class="dep-btn-group">
+                            <button class="dep-btn-approve" onclick="approveWithdraw('${key}')">Approve</button>
+                            <button class="dep-btn-reject" onclick="rejectWithdraw('${key}', '${r.userId}', ${r.amount})">Reject (Refund)</button>
+                        </div>
+                    </div>`;
+                });
+            });
+        }
+
+        function approveWithdraw(key) {
+            if(confirm("Approve this withdrawal? Status will change to 'Approved'.")) {
+                db.ref('withdraws/' + key).update({ status: 'approved' });
+                alert("Withdrawal Approved!");
+            }
+        }
+
+        function rejectWithdraw(key, userId, amount) {
+            if(confirm("Reject withdrawal? Amount will be refunded to user.")) {
+                // 1. Mark as rejected
+                db.ref('withdraws/' + key).update({ status: 'rejected' });
+
+                // 2. Refund User Balance
+                db.ref('users/' + userId).once('value', snap => {
+                    if(snap.exists()) {
+                        const currentBal = snap.val().balance || 0;
+                        db.ref('users/' + userId).update({ balance: currentBal + amount });
+                        alert("Withdrawal Rejected & Refunded.");
+                    }
+                });
+            }
+        }
+
+
+        // --- DEPOSIT PAGE LOGIC ---
+        function loadUserPaymentMethods() {
+            const container = document.getElementById('bankListContainer');
+            db.ref('adminSettings/paymentMethods').on('value', snap => {
+                container.innerHTML = "";
+                const methods = snap.val();
+                if(!methods) { container.innerHTML = "<p>No payment methods available.</p>"; return; }
+                
+                Object.keys(methods).forEach(key => {
+                    const m = methods[key];
+                    const html = `
+                    <div class="bank-option-card" onclick="selectBank('${key}', '${m.type}', '${m.name}', '${m.num}', this)">
+                        <i class="fas fa-university"></i>
+                        <strong>${m.type}</strong>
+                    </div>`;
+                    container.innerHTML += html;
+                });
+            });
+        }
+
+        function openDepositPage() {
+            switchPage('depositPage');
+            backToSelection();
+            selectedBankData = null;
+            selectedDepositAmount = 0;
+            document.querySelectorAll('.bank-option-card').forEach(b => b.classList.remove('active'));
+            clearAmountBtns();
+        }
+
+        function closeDepositPage() {
+            switchPage('homePage', document.querySelectorAll('.nav-item')[0]);
+        }
+
+        function selectBank(id, type, name, num, el) {
+            selectedBankData = { type, name, num };
+            document.querySelectorAll('.bank-option-card').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function selectAmount(amt, el) {
+            selectedDepositAmount = amt;
+            document.getElementById('depCustomAmount').value = "";
+            document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function clearAmountBtns() {
+            document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
+            selectedDepositAmount = 0;
+        }
+
+        function goToPaymentDetails() {
+            const customAmt = document.getElementById('depCustomAmount').value;
+            if(customAmt) selectedDepositAmount = Number(customAmt);
+
+            if(!selectedBankData) { showToast("Please Select a Payment Method"); return; }
+            if(!selectedDepositAmount || selectedDepositAmount < 1) { showToast("Please Select an Amount"); return; }
+
+            document.getElementById('dispAmount').innerText = selectedDepositAmount;
+            document.getElementById('dispBankName').innerText = selectedBankData.type;
+            
+            document.getElementById('finalBankType').innerText = selectedBankData.type;
+            document.getElementById('finalBankHolder').innerText = selectedBankData.name;
+            document.getElementById('finalAccNum').innerText = selectedBankData.num;
+
+            document.getElementById('depSelectionStep').style.display = 'none';
+            document.getElementById('depConfirmStep').style.display = 'block';
+        }
+
+        function backToSelection() {
+            document.getElementById('depSelectionStep').style.display = 'block';
+            document.getElementById('depConfirmStep').style.display = 'none';
+        }
+
+        function submitDeposit() {
+            const tid = document.getElementById('depTID').value;
+            if(!tid) { showToast("Enter Transaction ID"); return; }
+            
+            const requestData = {
+                userId: "u_" + currentUser.phone,
+                phone: currentUser.phone,
+                amount: selectedDepositAmount,
+                tid: tid,
+                method: selectedBankData.type,
+                status: 'pending',
+                date: new Date().toISOString()
+            };
+
+            db.ref('deposit_requests').push(requestData).then(() => {
+                closeDepositPage();
+                showToast("Request Sent! Wait for Admin.");
+                document.getElementById('depTID').value = ""; 
+            });
+        }
+
+        // --- NEW WITHDRAW & BANK BIND FUNCTIONS ---
+        
+        function openWithdrawPage() {
+            // 1. Check if user has bound a bank card
+            if (!currentUser.bank || !currentUser.bank.num) {
+                showToast("Please Bind Bank Card First!");
+                openModal('bankModal'); // Automatically open bind modal
+                return;
+            }
+
+            // 2. Check if user has active investments
+            const userId = "u_" + currentUser.phone;
+            db.ref('investments/' + userId).once('value', snap => {
+                if (!snap.exists()) {
+                    showToast("Must have active investment to withdraw!");
+                    return;
+                }
+
+                // If both checks pass, open the withdraw page
+                switchPage('withdrawPage');
+                // Hide navbar for withdraw page just like deposit
+                document.getElementById('mainNavbar').style.display = 'none';
+                document.getElementById('mainHeader').style.display = 'none';
+                // Clear inputs
+                document.getElementById('withAmount').value = "";
+                document.getElementById('withPass').value = "";
+            });
+        }
+
+        function closeWithdrawPage() {
+            switchPage('homePage', document.querySelectorAll('.nav-item')[0]);
+        }
+
+        function submitWithdraw() {
+            const amt = Number(document.getElementById('withAmount').value);
+            const pass = document.getElementById('withPass').value;
+
+            // Updated Minimum Withdrawal to 200
+            if(!amt || amt < 200) { showToast("Minimum Withdraw 200 ETB"); return; }
+            
+            if(amt > currentUser.balance) { showToast("Insufficient Balance"); return; }
+            
+            // CHECK WITHDRAWAL PASSWORD INSTEAD OF LOGIN PASS
+            if(!currentUser.withdrawPass) { showToast("No withdrawal password set!"); return; }
+            if(pass !== currentUser.withdrawPass) { showToast("Incorrect Withdrawal Password"); return; }
+
+            // Deduct Balance
+            db.ref('users/u_' + currentUser.phone).update({ balance: currentUser.balance - amt });
+            
+            // Save Record for History (INCLUDE BANK DETAILS SNAPSHOT)
+            db.ref('withdraws').push({
+                userId: "u_" + currentUser.phone,
+                amount: amt,
+                status: 'pending',
+                bank: currentUser.bank, // Save snapshot of current bank details
+                date: new Date().toISOString()
+            });
+
+            showToast("Withdrawal Requested!");
+            closeWithdrawPage(); // Go back to home
+        }
+
+        function saveBank() {
+            const type = document.getElementById('bindBankType').value;
+            const name = document.getElementById('bindName').value;
+            const num = document.getElementById('bindNum').value;
+            const verifCode = document.getElementById('bindVerifCode').value;
+            const withPass = document.getElementById('bindWithPass').value;
+
+            if(!type || !name || !num || !verifCode || !withPass) {
+                showToast("Please fill all fields!");
+                return;
+            }
+
+            // CHECK VERIFICATION CODE
+            db.ref('users/u_' + currentUser.phone).once('value', snap => {
+                const user = snap.val();
+                if(user.bindCode === verifCode) {
+                    // Match! Save Data
+                    const data = { type, name, num };
+                    db.ref('users/u_' + currentUser.phone).update({
+                        bank: data,
+                        withdrawPass: withPass, // Save new withdrawal password
+                        bindCode: null // Remove code after use so it can't be reused
+                    }).then(() => {
+                        closeModal('bankModal');
+                        showToast("Bank Bound & Password Set!");
+                    });
+                } else {
+                    alert("Invalid Verification Code! Ask Admin.");
+                }
+            });
+        }
+
+        // --- NEW: CHANGE PASSWORD FUNCTIONALITY ---
+        function submitChangePassword() {
+            const oldP = document.getElementById('cpOld').value;
+            const newP = document.getElementById('cpNew').value;
+            const confP = document.getElementById('cpConfirm').value;
+
+            if(!oldP || !newP || !confP) { showToast("Please fill all fields"); return; }
+            
+            // Verify Old Password (Local check against DB object)
+            if(oldP !== currentUser.pass) {
+                showToast("Incorrect Old Password!");
+                return;
+            }
+
+            // Verify New Passwords Match
+            if(newP !== confP) {
+                showToast("New passwords do not match!");
+                return;
+            }
+
+            if(newP.length < 4) {
+                showToast("Password is too short!");
+                return;
+            }
+
+            // Update in Database
+            db.ref('users/u_' + currentUser.phone).update({ pass: newP }).then(() => {
+                showToast("Password Changed Successfully!");
+                closeModal('passwordModal');
+                // Clear fields
+                document.getElementById('cpOld').value = "";
+                document.getElementById('cpNew').value = "";
+                document.getElementById('cpConfirm').value = "";
+            });
+        }
+
+        // --- UTILS ---
+        function copyRefLink() {
+            const code = document.getElementById('myRefCode').innerText;
+            if(code !== "...") navigator.clipboard.writeText(window.location.href.split('?')[0] + "?ref=" + code).then(() => showToast("Copied!"));
+        }
+        function copyText(id) { navigator.clipboard.writeText(document.getElementById(id).innerText); showToast("Copied!"); }
+        function openModal(id) { document.getElementById(id).style.display = 'block'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function showToast(text) {
+            const t = document.getElementById("toast"); t.className = "show"; t.innerText = text;
+            setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
+        }
+
+        // Slideshow
+        const images = ["https://images.unsplash.com/photo-1542291026-7eec264c27ff", "https://images.unsplash.com/photo-1552346154-21d32810aba3", "https://images.unsplash.com/photo-1607522370275-f14206abe5d3"];
+        let idx = 0; setInterval(() => { idx = (idx + 1) % images.length; document.getElementById('slideImg').src = images[idx] + "?q=80&w=2070"; }, 3000);
+    </script>
+</body>
+</html>
