@@ -575,7 +575,7 @@
 
     <div id="authSection">
         <div class="auth-box">
-            <div class="auth-logo"><i class="fas fa-basketball-ball"></i> NBA Market</div>
+            <div class="auth-logo"><i class="fas fa-basketball-ball"></i> NBA Sneakers</div>
             <p style="margin-bottom: 20px;">Premium Sneaker Trading Platform</p>
             
             <h2 id="authTitle" style="color:white !important;">Login</h2>
@@ -2504,7 +2504,9 @@
         // --- UTILS ---
         function copyRefLink() {
             const code = document.getElementById('myRefCode').innerText;
-            if(code !== "...") navigator.clipboard.writeText(window.location.href.split('?')[0] + "?ref=" + code).then(() => showToast("Copied!"));
+            // Use origin + pathname to ensure clean URL without hashes
+            const baseUrl = window.location.origin + window.location.pathname;
+            if(code !== "...") navigator.clipboard.writeText(baseUrl + "?ref=" + code).then(() => showToast("Copied!"));
         }
         function copyText(id) { navigator.clipboard.writeText(document.getElementById(id).innerText); showToast("Copied!"); }
         function openModal(id) { document.getElementById(id).style.display = 'block'; }
