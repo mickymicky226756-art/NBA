@@ -1509,12 +1509,28 @@
                     });
 
                     // 3. CHECK FIRST INVESTMENT BONUS (One time 12% on invest)
-                    db.ref('investments/u_' + currentUser.phone).once('value', snap => {
-                        if (snap.numChildren() === 1) {
-                            // Give 12% Bonus to DIRECT Referrer ONLY (Level 1)
-                            distributeOneTimeBonus(currentUser.refBy, price);
-                        }
-                    });
+                    // **FIXED LOGIC**: ONLY GIVE BONUS IF THIS IS THE FIRST *PAID* PLAN (PRICE > 0)
+                    if (price > 0) { 
+                        db.ref('investments/u_' + currentUser.phone).once('value', snap => {
+                            let paidPlanCount = 0;
+                            if (snap.exists()) {
+                                snap.forEach(child => {
+                                    const p = child.val();
+                                    // Count how many plans they have that cost money (Ignore welcome plan)
+                                    if (p.price > 0) {
+                                        paidPlanCount++;
+                                    }
+                                });
+                            }
+
+                            // If paidPlanCount is exactly 1, it means the plan we just added above
+                            // is their VERY FIRST paid plan. So we give the bonus.
+                            if (paidPlanCount === 1) {
+                                // Give 12% Bonus to DIRECT Referrer ONLY (Level 1)
+                                distributeOneTimeBonus(currentUser.refBy, price);
+                            }
+                        });
+                    }
 
                     showToast("Investment Successful!");
                     switchPage('investPage');
