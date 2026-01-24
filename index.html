@@ -1778,9 +1778,14 @@
                 const l2Codes = l2Users.map(u => u.refCode);
                 const l3Users = Object.values(users).filter(u => l2Codes.includes(u.refBy));
 
-                // Helper to count active members (those who have an investment entry)
+                // Helper to count active members (ONLY those who bought a plan with price > 0)
                 const countActive = (list) => {
-                    return list.filter(u => investments["u_" + u.phone]).length;
+                    return list.filter(u => {
+                        const userInvs = investments["u_" + u.phone];
+                        if (!userInvs) return false;
+                        // Check if they have at least one plan with price > 0 (Paid Plan)
+                        return Object.values(userInvs).some(p => p.price > 0);
+                    }).length;
                 };
 
                 // UPDATE STATS ON UI
@@ -1801,7 +1806,10 @@
                 }
 
                 targetList.forEach(member => {
-                    const hasInvested = investments["u_" + member.phone] ? true : false;
+                    // Check active status strictly based on PAID plans
+                    const userInvs = investments["u_" + member.phone];
+                    const hasInvested = userInvs && Object.values(userInvs).some(p => p.price > 0);
+                    
                     const statusClass = hasInvested ? "status-active" : "status-inactive";
                     const statusText = hasInvested ? "VIP Investor" : "Member";
                     const badgeClass = hasInvested ? "active" : "inactive";
